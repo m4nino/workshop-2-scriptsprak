@@ -155,6 +155,8 @@ def network_incidents(input_csv=INPUT_CSV):
 
 def incident_analysis(results, out_txt=OUT_TXT):
     with open(out_txt, "w", encoding="utf-8") as f:
+
+        # INCIDENT ANALYSIS - TechCorp AB
         f.write("=" * 90 + "\n")
         f.write(format_columns(
             ["INCIDENT ANALYSIS - TechCorp AB ", f"Report period: {results['period']}"],
@@ -166,6 +168,7 @@ def incident_analysis(results, out_txt=OUT_TXT):
         f.write(f"Total incidents: {results['total_incidents']}\n")
         f.write(f"Total cost (SEK): {format_sek(results['total_cost'])}\n\n")
 
+        # key highlights
         f.write("\n" + "=" * 66)
         f.write("\nKey highlights:")
         f.write("\n" + "=" * 66 + "\n")
@@ -178,6 +181,7 @@ def incident_analysis(results, out_txt=OUT_TXT):
         f.write(f"- Incidents affecting >100 users: {len(results['big_incidents'])}\n")
         f.write(f"- Recurring devices count: {len(results['recurring_devices'])}\n\n")
 
+        # incidents by severity
         f.write("\n" + "=" * 75)
         f.write("\nIncidents by severity:")
         f.write("\n" + "=" * 75 + "\n")
@@ -191,11 +195,36 @@ def incident_analysis(results, out_txt=OUT_TXT):
                 [sev.capitalize(), data['count'], data['avg_res'], format_sek(data['avg_cost'])],
                 [18, 18, 18, 18],
          ))
-        f.write("\n" + "=" * 90)
+
+        # incidents affecting more than 100 users
+        f.write("\n\n" + "=" * 90 + "\n")
+        f.write("Incidents affecting more than 100 users:\n")
+        f.write("=" * 90 + "\n")
+        f.write(format_columns(
+            ["Ticket", "Device", "Site", "Affected Users", "Cost (SEK)"],
+            [18, 18, 18, 18, 18],
+        ))
+
+        f.write("-" * 90 + "\n")
+
+        for r in results["big_incidents"]:
+            f.write(format_columns(
+                [
+                    r.get("ticket_id", "-"),
+                    r.get("device_hostname", "-"),
+                    r.get("site", "-"),
+                    r.get("affected_users", 0),
+                    format_sek(r.get("cost_sek", 0.0))
+                ],
+                [18, 18, 18, 18, 18]
+            ))
+
+        # top 5 incidents by cost
+        f.write("\n\n" + "=" * 90)
         f.write("\nTop 5 incidents by cost:\n")
         f.write("=" * 90 + "\n")
         f.write(format_columns(
-            ["Ticket", "Device", "Site", "Cost (SEK)", "Category"],
+            ["Ticket", "Device", "Site", "Category", "Cost (SEK)"],
             [18, 18, 18, 18, 18],
         ))
         f.write("-" * 90 + "\n")
@@ -206,8 +235,8 @@ def incident_analysis(results, out_txt=OUT_TXT):
                     t.get('ticket_id','-'),
                     t.get('device_hostname','-'),
                     t.get('site', '-'),
-                    format_sek(t.get('cost_sek',0.0)), 
-                    t.get('category','-')
+                    t.get('category','-'),
+                    format_sek(t.get('cost_sek',0.0)) 
                 ],
                 [18, 18, 18, 18, 18],    
             ))         

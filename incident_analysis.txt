@@ -26,13 +26,30 @@ High               13                 108                8 251,60
 Low                12                 107                1 612,79          
 Medium             17                 113                3 506,68          
 
+
+==========================================================================================
+Incidents affecting more than 100 users:
+==========================================================================================
+Ticket             Device             Site               Affected Users     Cost (SEK)        
+------------------------------------------------------------------------------------------
+TECH-2024-006      SW-DC-TOR-02       Datacenter         156                23 456,90         
+TECH-2024-014      SW-DC-TOR-02       Datacenter         123                15 678,75         
+TECH-2024-022      SW-DC-TOR-02       Datacenter         189                34 567,50         
+TECH-2024-026      SW-DC-CORE-02      Datacenter         234                5 234,75          
+TECH-2024-030      FW-DC-02           Datacenter         145                8 765,50          
+TECH-2024-034      SW-DC-TOR-02       Datacenter         167                12 345,75         
+TECH-2024-039      LB-DC-02           Datacenter         198                11 234,25         
+TECH-2024-047      SW-DC-CORE-01      Datacenter         123                5 789,75          
+TECH-2024-052      FW-DC-01           Datacenter         178                8 456,25          
+
+
 ==========================================================================================
 Top 5 incidents by cost:
 ==========================================================================================
-Ticket             Device             Site               Cost (SEK)         Category          
+Ticket             Device             Site               Category           Cost (SEK)        
 ------------------------------------------------------------------------------------------
-TECH-2024-024      SW-ACCESS-03       Huvudkontor        45 678,90          hardware          
-TECH-2024-022      SW-DC-TOR-02       Datacenter         34 567,50          connectivity      
-TECH-2024-040      RT-LAGER-01        Lager              28 765,50          connectivity      
-TECH-2024-049      RT-MAL-01          Kontor Malmö       26 789,75          hardware          
-TECH-2024-037      RT-DR-01           Säkerhetskopia     24 567,25          connectivity      
+TECH-2024-024      SW-ACCESS-03       Huvudkontor        hardware           45 678,90         
+TECH-2024-022      SW-DC-TOR-02       Datacenter         connectivity       34 567,50         
+TECH-2024-040      RT-LAGER-01        Lager              connectivity       28 765,50         
+TECH-2024-049      RT-MAL-01          Kontor Malmö       hardware           26 789,75         
+TECH-2024-037      RT-DR-01           Säkerhetskopia     connectivity       24 567,25         
