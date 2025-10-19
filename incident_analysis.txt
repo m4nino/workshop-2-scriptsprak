@@ -1,0 +1,38 @@
+==========================================================================================
+INCIDENT ANALYSIS - TechCorp AB                          Report period: Weeks 36 to 39
+==========================================================================================
+Sites covered: Datacenter, Huvudkontor, Kontor Malmö, Lager, Säkerhetskopia
+
+Total incidents: 52
+Total cost (SEK): 445 910,10
+
+
+==================================================================
+Key highlights:
+==================================================================
+- Most frequent device: SW-DC-TOR-02 (4 incidents)
+- Most expensive incident: 45 678,90 SEK; ticket: TECH-2024-024
+- Incidents affecting >100 users: 9
+- Recurring devices count: 14
+
+
+===========================================================================
+Incidents by severity:
+===========================================================================
+Severity           Count              Avg Res (min)      Avg Cost (SEK)    
+---------------------------------------------------------------------------
+Critical           10                 119                25 967,23         
+High               13                 108                8 251,60          
+Low                12                 107                1 612,79          
+Medium             17                 113                3 506,68          
+
+==========================================================================================
+Top 5 incidents by cost:
+==========================================================================================
+Ticket             Device             Site               Cost (SEK)         Category          
+------------------------------------------------------------------------------------------
+TECH-2024-024      SW-ACCESS-03       Huvudkontor        45 678,90          hardware          
+TECH-2024-022      SW-DC-TOR-02       Datacenter         34 567,50          connectivity      
+TECH-2024-040      RT-LAGER-01        Lager              28 765,50          connectivity      
+TECH-2024-049      RT-MAL-01          Kontor Malmö       26 789,75          hardware          
+TECH-2024-037      RT-DR-01           Säkerhetskopia     24 567,25          connectivity      
