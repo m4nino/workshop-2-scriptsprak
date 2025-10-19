@@ -1,6 +1,6 @@
 # import the csv file
 import csv
-from collections import Counter
+from collections import Counter, defaultdict
 from datetime import datetime
 
 INPUT_CSV = "network_incidents.csv"
@@ -137,6 +137,41 @@ def network_incidents(input_csv=INPUT_CSV):
     device_counts = Counter(r.get("device_hostname") or "UNKNOWN" for r in rows)
     recurring = {d: c for d, c in device_counts.items() if c > 1}
 
+    # incidents by site (csv)
+    site_summary = {}
+    for r in rows:
+        site = r.get("site") or "UNKNOWN"
+        if site not in site_summary:
+            site_summary[site] = {"count": 0, "total_cost": 0.0, "total_res": 0}
+        site_summary[site]["count"] += 1
+        site_summary[site]["total_res"] += r.get("resolution_minutes", 0)
+        site_summary[site]["total_cost"] += r.get("cost_sek", 0.0)
+
+    for site, data in site_summary.items():
+        data["avg_res"] = round(data["total_res"] / data["count"], 1) if data["count"] else 0
+
+    cat_scores = defaultdict(list)
+    for r in rows:
+        score = r.get("affected_users", 0) * r.get("resolution_minutes", 0)
+        cat = r.get("category") or "UNKNOWN"
+        cat_scores[cat].append(score)
+
+    avg_cat_scores = {
+        cat : round (sum(vals)/len(vals), 1)
+        for cat, vals in cat_scores.items() if vals
+    }
+
+    with open ("incidents_by_site.csv", "w", newline="", encoding="utf-8") as f:
+        writer = csv.writer(f)
+        writer.writerow(["Site", "Incidents", "Avg Resolution (min)", "Total Cost (SEK)"])
+        for site , data in site_summary.items():
+            writer.writerow([
+                site,
+                data["count"],
+                data["avg_res"],
+                f"{data['total_cost']:.2f}".replace(".", ",")
+            ])
+
     return {
         "rows": rows,
         "total_incidents": total_incidents,
@@ -149,7 +184,9 @@ def network_incidents(input_csv=INPUT_CSV):
         "top5": top5,
         "recurring_devices": recurring,
         "device_counts": device_counts,
-}
+        "site_summary": site_summary,
+        "avg_cat_scores": avg_cat_scores,
+    }
 
 # generate text report
 
