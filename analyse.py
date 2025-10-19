@@ -141,11 +141,18 @@ def network_incidents(input_csv=INPUT_CSV):
     site_summary = {}
     for r in rows:
         site = r.get("site") or "UNKNOWN"
+        sev = (r.get("severity") or "").lower()
         if site not in site_summary:
-            site_summary[site] = {"count": 0, "total_cost": 0.0, "total_res": 0}
+            site_summary[site] = {
+                "count": 0, "total_cost": 0.0, "total_res": 0,
+                "critical": 0, "high": 0, "medium": 0, "low": 0
+                }
         site_summary[site]["count"] += 1
         site_summary[site]["total_res"] += r.get("resolution_minutes", 0)
         site_summary[site]["total_cost"] += r.get("cost_sek", 0.0)
+
+        if sev in ("critical", "high", "medium", "low"):
+            site_summary[site][sev] += 1
 
     for site, data in site_summary.items():
         data["avg_res"] = round(data["total_res"] / data["count"], 1) if data["count"] else 0
@@ -163,11 +170,25 @@ def network_incidents(input_csv=INPUT_CSV):
 
     with open ("incidents_by_site.csv", "w", newline="", encoding="utf-8") as f:
         writer = csv.writer(f)
-        writer.writerow(["Site", "Incidents", "Avg Resolution (min)", "Total Cost (SEK)"])
+        writer.writerow([
+            "Site", 
+            "Total Incidents",
+            "Critical Incidents",
+            "High Incidents",
+            "Medium Incidents",
+            "Low Incidents", 
+            "Avg Resolution (min)", 
+            "Total Cost (SEK)"
+        ])
+
         for site , data in site_summary.items():
             writer.writerow([
                 site,
                 data["count"],
+                data["critical"],
+                data["high"],
+                data["medium"],
+                data["low"],
                 data["avg_res"],
                 f"{data['total_cost']:.2f}".replace(".", ",")
             ])
