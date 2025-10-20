@@ -137,6 +137,20 @@ def network_incidents(input_csv=INPUT_CSV):
     device_counts = Counter(r.get("device_hostname") or "UNKNOWN" for r in rows)
     recurring = {d: c for d, c in device_counts.items() if c > 1}
 
+    cat_scores = defaultdict(list)
+    for r in rows:
+        cat = r.get("category") or "UNKNOWN"
+        try:
+            score = float((r.get("impact_score") or "").replace(",", "."))
+            cat_scores[cat].append(score)
+        except (ValueError, AttributeError):
+            pass
+
+    avg_cat_scores = {
+        cat: round(sum(vals) / len(vals), 1)
+        for cat, vals in cat_scores.items() if vals
+}
+
     # incidents by site (csv)
     site_summary = {}
     for r in rows:
@@ -156,17 +170,6 @@ def network_incidents(input_csv=INPUT_CSV):
 
     for site, data in site_summary.items():
         data["avg_res"] = round(data["total_res"] / data["count"], 1) if data["count"] else 0
-
-    cat_scores = defaultdict(list)
-    for r in rows:
-        score = r.get("affected_users", 0) * r.get("resolution_minutes", 0)
-        cat = r.get("category") or "UNKNOWN"
-        cat_scores[cat].append(score)
-
-    avg_cat_scores = {
-        cat : round (sum(vals)/len(vals), 1)
-        for cat, vals in cat_scores.items() if vals
-    }
 
     with open ("incidents_by_site.csv", "w", newline="", encoding="utf-8") as f:
         writer = csv.writer(f)
@@ -252,7 +255,7 @@ def incident_analysis(results, out_txt=OUT_TXT):
             f.write(format_columns(
                 [sev.capitalize(), data['count'], data['avg_res'], format_sek(data['avg_cost'])],
                 [18, 18, 18, 18],
-         ))
+        ))
 
         # incidents affecting more than 100 users
         f.write("\n\n" + "=" * 90 + "\n")
@@ -297,7 +300,17 @@ def incident_analysis(results, out_txt=OUT_TXT):
                     format_sek(t.get('cost_sek',0.0)) 
                 ],
                 [18, 18, 18, 18, 18],    
-            ))         
+            ))   
+
+        # average impact score
+        f.write("\n\n" + "=" * 50 + "\n")
+        f.write("Incidents per category with average impact score:\n")
+        f.write("=" * 50 + "\n")
+        f.write(f"{'Category':<30}{'Avg Impact Score':>20}\n")
+        f.write("-" * 50 + "\n")
+
+        for cat, score in sorted(results["avg_cat_scores"].items()):
+            f.write(f"{cat:<30}{score:>20}\n")
 
 # --------------------
 # entrypoint: run analysis and produce text report only

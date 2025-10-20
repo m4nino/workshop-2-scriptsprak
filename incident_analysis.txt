@@ -53,3 +53,15 @@ TECH-2024-022      SW-DC-TOR-02       Datacenter         connectivity       34 5
 TECH-2024-040      RT-LAGER-01        Lager              connectivity       28 765,50         
 TECH-2024-049      RT-MAL-01          Kontor Malmö       hardware           26 789,75         
 TECH-2024-037      RT-DR-01           Säkerhetskopia     connectivity       24 567,25         
+
+
+==================================================
+Incidents per category with average impact score:
+==================================================
+Category                          Avg Impact Score
+--------------------------------------------------
+connectivity                                   6.8
+hardware                                       7.1
+performance                                    6.0
+security                                       5.8
+wifi                                           6.3
