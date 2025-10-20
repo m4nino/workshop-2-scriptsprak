@@ -149,7 +149,8 @@ def network_incidents(input_csv=INPUT_CSV):
     avg_cat_scores = {
         cat: round(sum(vals) / len(vals), 1)
         for cat, vals in cat_scores.items() if vals
-}
+    }
+    cat_counts = Counter(r.get("category") or "UNKNOWN" for r in rows)
 
     # incidents by site (csv)
     site_summary = {}
@@ -210,6 +211,7 @@ def network_incidents(input_csv=INPUT_CSV):
         "device_counts": device_counts,
         "site_summary": site_summary,
         "avg_cat_scores": avg_cat_scores,
+        "cat_counts": cat_counts
     }
 
 # generate text report
@@ -303,14 +305,15 @@ def incident_analysis(results, out_txt=OUT_TXT):
             ))   
 
         # average impact score
-        f.write("\n\n" + "=" * 50 + "\n")
+        f.write("\n\n" + "=" * 75 + "\n")
         f.write("Incidents per category with average impact score:\n")
-        f.write("=" * 50 + "\n")
-        f.write(f"{'Category':<30}{'Avg Impact Score':>20}\n")
-        f.write("-" * 50 + "\n")
+        f.write("=" * 75 + "\n")
+        f.write(f"{'Category':38}{'Count':19}{'Avg Impact Score':15}\n")
+        f.write("-" * 75 + "\n")
 
         for cat, score in sorted(results["avg_cat_scores"].items()):
-            f.write(f"{cat:<30}{score:>20}\n")
+            count = results["cat_counts"].get(cat, 0)
+            f.write(f"{cat:21}{count:20}{score:20}\n")
 
 # --------------------
 # entrypoint: run analysis and produce text report only
