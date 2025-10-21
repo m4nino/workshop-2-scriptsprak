@@ -231,18 +231,33 @@ def incident_analysis(results, out_txt=OUT_TXT):
         f.write(f"Total incidents: {results['total_incidents']}\n")
         f.write(f"Total cost (SEK): {format_sek(results['total_cost'])}\n\n")
 
-        # key highlights
-        f.write("\n" + "=" * 66)
-        f.write("\nKey highlights:")
-        f.write("\n" + "=" * 66 + "\n")
-        if results["device_counts"]:
-            most, cnt = max(results["device_counts"].items(), key=lambda x: x[1])
-            f.write(f"- Most frequent device: {most} ({cnt} incidents)\n")
-        if results["top5"]:
-            t = results["top5"][0]
-            f.write(f"- Most expensive incident: {format_sek(t.get('cost_sek',0.0))} SEK; ticket: {t.get('ticket_id','N/A')}\n")
-        f.write(f"- Incidents affecting >100 users: {len(results['big_incidents'])}\n")
-        f.write(f"- Recurring devices count: {len(results['recurring_devices'])}\n\n")
+        # executive summary
+        f.write("\n" + "=" * 90)
+        f.write("\nExecutive Summary:")
+        f.write("\n" + "=" * 90 + "\n")
+
+        tor02_incidents = [r for r in results["rows"] if r.get("device_hostname") == "SW-DC-TOR-02"]
+        if tor02_incidents:
+            weeks = {r.get("week_number") for r in tor02_incidents if r.get("week_number")}
+            f.write(
+                f"⚠ CRITICAL: SW-DC-TOR–02 stands out as the most frequent device with repeated failures\n"
+                f"({len(tor02_incidents)} incidents across {len(weeks)} weeks)\n\n"
+            )
+            
+        if results["rows"]:
+            most_expensive = max(results["rows"], key=lambda r: r.get("cost_sek", 0) or 0)
+            f.write(
+                f"⚠ Most expensive incident: {format_sek(most_expensive.get('cost_sek', 0))} SEK "
+                f"(Ticket {most_expensive.get('ticket_id')}, {most_expensive.get('device_hostname')}, "
+                f"{most_expensive.get('site')})\n\n"
+            )
+
+        total = results['total_incidents']
+        crit_count = results["per_severity"].get("critical", {}).get("count", 0)
+        non_crit = total - crit_count
+        f.write(
+            f"✓ Majority of incidents were non-crititical ({non_crit} of {total})\n\n"
+            )
 
         # incidents by severity
         f.write("\n" + "=" * 75)
@@ -253,7 +268,9 @@ def incident_analysis(results, out_txt=OUT_TXT):
             [18, 18, 18, 18],
         ))
         f.write("-" * 75 + "\n")
-        for sev, data in sorted(results["per_severity"].items(), key=lambda x: x[0]):
+        severity_order = {"critical":1, "high": 2, "medium": 3, "low": 4}
+        for sev, data in sorted(results["per_severity"].items(), 
+            key=lambda x: severity_order.get(x[0].lower(), 99)):
             f.write(format_columns(
                 [sev.capitalize(), data['count'], data['avg_res'], format_sek(data['avg_cost'])],
                 [18, 18, 18, 18],
@@ -261,7 +278,7 @@ def incident_analysis(results, out_txt=OUT_TXT):
 
         # incidents affecting more than 100 users
         f.write("\n\n" + "=" * 90 + "\n")
-        f.write("Incidents affecting more than 100 users:\n")
+        f.write(f"Incidents affecting more than 100 users ({len(results['big_incidents'])}):\n")
         f.write("=" * 90 + "\n")
         f.write(format_columns(
             ["Ticket", "Device", "Site", "Affected Users", "Cost (SEK)"],
