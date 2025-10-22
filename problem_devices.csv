@@ -1,35 +1,35 @@
 device_hostname,site,device_type,incident_count,avg_severity_score,total_cost_sek,avg_affected_users,in_last_weeks_warnings
-SW-DC-TOR-02,Datacenter,switch,4,3.8,"86 048,90",158.8,no
-RT-LAGER-01,Lager,router,3,2.7,"34 901,15",35.7,no
-SW-DR-01,Säkerhetskopia,switch,3,1.3,"5 258,50",6.7,yes
-AP-FLOOR2-02,Huvudkontor,access_point,2,3.5,"29 111,00",63.0,yes
-RT-MAL-01,Kontor Malmö,router,2,2.5,"28 579,25",38.5,yes
-RT-DR-01,Säkerhetskopia,router,2,3.0,"26 912,50",10.5,no
-AP-LAGER-02,Lager,access_point,2,3.0,"22 513,25",50.5,no
-AP-MAL-01,Kontor Malmö,access_point,2,2.5,"22 134,50",39.5,no
-FW-DC-01,Datacenter,firewall,2,3.0,"14 134,50",133.5,yes
-SW-LAGER-02,Lager,switch,2,2.5,"11 679,50",43.5,yes
-FW-DR-01,Säkerhetskopia,firewall,2,2.0,"9 545,00",7.5,yes
-SW-CORE-01,Huvudkontor,switch,2,2.0,"7 458,25",25.5,no
-AP-LAGER-01,Lager,access_point,2,1.5,"4 357,25",15.5,no
-SW-DC-TOR-01,Datacenter,switch,2,1.5,"4 221,50",56.0,yes
-SW-ACCESS-03,Huvudkontor,switch,1,4.0,"45 678,90",87.0,yes
-LB-DC-02,Datacenter,load_balancer,1,3.0,"11 234,25",198.0,no
-SW-MAL-CORE-01,Kontor Malmö,switch,1,3.0,"9 876,25",67.0,no
-FW-DC-02,Datacenter,firewall,1,3.0,"8 765,50",145.0,yes
-RT-EDGE-02,Huvudkontor,router,1,3.0,"8 234,50",45.0,no
-SW-ACCESS-05,Huvudkontor,switch,1,3.0,"6 789,25",34.0,no
-AP-MAL-02,Kontor Malmö,access_point,1,3.0,"6 543,50",43.0,yes
-SW-DC-CORE-01,Datacenter,switch,1,2.0,"5 789,75",123.0,yes
-SW-DC-CORE-02,Datacenter,switch,1,2.0,"5 234,75",234.0,yes
-SW-LAGER-01,Lager,switch,1,2.0,"4 678,25",41.0,no
-LB-DC-01,Datacenter,load_balancer,1,2.0,"4 567,25",78.0,no
-AP-FLOOR3-01,Huvudkontor,access_point,1,2.0,"4 321,25",38.0,yes
-FW-DMZ-01,Huvudkontor,firewall,1,2.0,"3 456,90",52.0,no
-SW-DIST-02,Huvudkontor,switch,1,2.0,"3 123,00",29.0,no
-SW-MAL-ACC-02,Kontor Malmö,switch,1,2.0,"2 890,00",16.0,no
-RT-EDGE-01,Huvudkontor,router,1,1.0,"2 156,25",12.0,yes
-SW-MAL-ACC-01,Kontor Malmö,switch,1,2.0,"2 123,50",24.0,yes
-SW-DIST-01,Huvudkontor,switch,1,1.0,"1 678,75",8.0,yes
-AP-FLOOR1-02,Huvudkontor,access_point,1,1.0,"1 345,75",15.0,no
-FW-MAL-01,Kontor Malmö,firewall,1,1.0,"567,50",23.0,no
+SW-DC-TOR-02,Datacenter,switch,4,3.75,"86 048,90",158.75,no
+RT-LAGER-01,Lager,router,3,2.67,"34 901,15",35.67,no
+SW-DR-01,Säkerhetskopia,switch,3,1.33,"5 258,50",6.67,yes
+AP-FLOOR2-02,Huvudkontor,access_point,2,3.50,"29 111,00",63.00,yes
+RT-MAL-01,Kontor Malmö,router,2,2.50,"28 579,25",38.50,yes
+RT-DR-01,Säkerhetskopia,router,2,3.00,"26 912,50",10.50,no
+AP-LAGER-02,Lager,access_point,2,3.00,"22 513,25",50.50,no
+AP-MAL-01,Kontor Malmö,access_point,2,2.50,"22 134,50",39.50,no
+FW-DC-01,Datacenter,firewall,2,3.00,"14 134,50",133.50,yes
+SW-LAGER-02,Lager,switch,2,2.50,"11 679,50",43.50,yes
+FW-DR-01,Säkerhetskopia,firewall,2,2.00,"9 545,00",7.50,yes
+SW-CORE-01,Huvudkontor,switch,2,2.00,"7 458,25",25.50,no
+AP-LAGER-01,Lager,access_point,2,1.50,"4 357,25",15.50,no
+SW-DC-TOR-01,Datacenter,switch,2,1.50,"4 221,50",56.00,yes
+SW-ACCESS-03,Huvudkontor,switch,1,4.00,"45 678,90",87.00,yes
+LB-DC-02,Datacenter,load_balancer,1,3.00,"11 234,25",198.00,no
+SW-MAL-CORE-01,Kontor Malmö,switch,1,3.00,"9 876,25",67.00,no
+FW-DC-02,Datacenter,firewall,1,3.00,"8 765,50",145.00,yes
+RT-EDGE-02,Huvudkontor,router,1,3.00,"8 234,50",45.00,no
+SW-ACCESS-05,Huvudkontor,switch,1,3.00,"6 789,25",34.00,no
+AP-MAL-02,Kontor Malmö,access_point,1,3.00,"6 543,50",43.00,yes
+SW-DC-CORE-01,Datacenter,switch,1,2.00,"5 789,75",123.00,yes
+SW-DC-CORE-02,Datacenter,switch,1,2.00,"5 234,75",234.00,yes
+SW-LAGER-01,Lager,switch,1,2.00,"4 678,25",41.00,no
+LB-DC-01,Datacenter,load_balancer,1,2.00,"4 567,25",78.00,no
+AP-FLOOR3-01,Huvudkontor,access_point,1,2.00,"4 321,25",38.00,yes
+FW-DMZ-01,Huvudkontor,firewall,1,2.00,"3 456,90",52.00,no
+SW-DIST-02,Huvudkontor,switch,1,2.00,"3 123,00",29.00,no
+SW-MAL-ACC-02,Kontor Malmö,switch,1,2.00,"2 890,00",16.00,no
+RT-EDGE-01,Huvudkontor,router,1,1.00,"2 156,25",12.00,yes
+SW-MAL-ACC-01,Kontor Malmö,switch,1,2.00,"2 123,50",24.00,yes
+SW-DIST-01,Huvudkontor,switch,1,1.00,"1 678,75",8.00,yes
+AP-FLOOR1-02,Huvudkontor,access_point,1,1.00,"1 345,75",15.00,no
+FW-MAL-01,Kontor Malmö,firewall,1,1.00,"567,50",23.00,no

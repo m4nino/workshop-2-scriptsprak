@@ -1,5 +1,5 @@
 ==========================================================================================
-INCIDENT ANALYSIS - TechCorp AB                          Report period: Weeks 36 to 39
+INCIDENT ANALYSIS - TechCorp AB                             Report period: Weeks 36-39
 ==========================================================================================
 Sites covered: Datacenter, Huvudkontor, Kontor Malmö, Lager, Säkerhetskopia
 
@@ -15,7 +15,7 @@ Executive Summary:
 
 ⚠ Most expensive incident: 45 678,90 SEK (Ticket TECH-2024-024, SW-ACCESS-03, Huvudkontor)
 
-✓ Majority of incidents were non-crititical (42 of 52)
+✓ Majority of incidents were non-critical (42 of 52)
 
 
 ===========================================================================
@@ -30,7 +30,7 @@ Low                12                 107                1 612,79
 
 
 ==========================================================================================
-Incidents affecting more than 100 users (9):
+Incidents affecting more than 100 users (9)
 ==========================================================================================
 Ticket             Device             Site               Affected Users     Cost (SEK)        
 ------------------------------------------------------------------------------------------
@@ -60,10 +60,38 @@ TECH-2024-037      RT-DR-01           Säkerhetskopia     connectivity       24 
 ===========================================================================
 Incidents per category with average impact score:
 ===========================================================================
-Category                              Count              Avg Impact Score
+Category           Count              Avg Impact Score  
 ---------------------------------------------------------------------------
-connectivity                           14                 6.8
-hardware                                9                 7.1
-performance                            14                 6.0
-security                                6                 5.8
-wifi                                    9                 6.3
+connectivity       14                 6.8               
+hardware           9                  7.1               
+performance        14                 6.0               
+security           6                  5.8               
+wifi               9                  6.3               
+
+
+==========================================================================================
+|                                     RECOMMENDATIONS                                    |
+==========================================================================================
+
+CRITICAL ⚠
+. SW-DC-TOR-02 (Datacenter, switch), 4 incidents, 86 048 SEK
+> Replace or add redundancy, perform root cause analysis 
+
+HIGH
+. RT-LAGER-01 (Lager, router) - 3 incidents, 34 901 SEK
+> Review configuration and redundancy 
+
+. AP-FLOOR2-02 (Huvudkontor, access_point) - 2 incidents, severity 3.5 
+> Add load balancing for more APs
+
+MEDIUM
+. FW-DC-01 (Datacenter, firewall) - 2 incidents, 133 users affected 
+> Increase monitoring, check capacity 
+
+LOW
+. Devices with single low-cost incidents (e.g. FW-MAL-01, SW-DIST-01) 
+> Monitor, address during planned maintenance 
+
+==========================================================================================
+|                                      END OF REPORT                                     |
+==========================================================================================

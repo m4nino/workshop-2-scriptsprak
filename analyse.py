@@ -12,6 +12,8 @@ OUT_TXT = "incident_analysis.txt"
 def parse_swedish_float(s):
     if s is None:
         return 0.0
+    if isinstance(s, (int, float)):
+        return float(s)
     s = s.strip()
     if s == "":
         return 0.0
@@ -36,7 +38,7 @@ def parse_date_flex(s):
     s = str(s).strip()
     for fmt in ("%Y-%m-%d", "%Y/%m/%d", "%d-%m-%Y", "%d/%m/%y"):
         try:
-            return datetime.strptime(s, fmt). date()
+            return datetime.strptime(s, fmt).date()
         except Exception:
             continue
     try:
@@ -88,12 +90,12 @@ def format_columns(values, widths, aligns=None, sep=" "):
 
 def network_incidents(input_csv=INPUT_CSV):
     rows = []
-    with open(INPUT_CSV, newline="", encoding="utf-8") as f:
+    with open(input_csv, newline="", encoding="utf-8") as f:
         reader = csv.DictReader(f) 
         for r in reader:
             row = {k: (v.strip() if isinstance(v, str) else v) for k, v in r.items()}
 
-            row["week_number"] = safe_int(row.get("week_number"))
+            row["week_number"] = safe_int(row.get("week_number", 0))
             row["resolution_minutes"] = safe_int(row.get("resolution_minutes"))
             row["affected_users"] = safe_int(row.get("affected_users"), default=0)           
             row["cost_sek"] = parse_swedish_float(row.get("cost_sek"))    
@@ -121,12 +123,13 @@ def network_incidents(input_csv=INPUT_CSV):
                 period = f"Week {min(weeks)}"
             else:
                 period = f"Weeks {min(weeks)}-{max(weeks)}"
-        period = f"Weeks {min(weeks)} to {max(weeks)}" if weeks else "Unknown period"
+        else:
+            period = "Unknown period"
 
     sev_counts = Counter((r.get("severity") or "unknown") for r in rows)
     per_severity = {}
     for sev in sorted(set(sev_counts.keys())):
-        grp = [r for r in rows if (r.get("severity") or "").strip().lower() == sev]
+        grp = [r for r in rows if r.get("severity") == sev]
         cnt = len(grp)
         avg_res = int(round(sum(r.get("resolution_minutes", 0) for r in grp) /cnt)) if cnt else 0
         avg_cost = round(sum(r.get("cost_sek", 0.0) for r in grp) / cnt, 2) if cnt else 0.0
@@ -141,9 +144,9 @@ def network_incidents(input_csv=INPUT_CSV):
     for r in rows:
         cat = r.get("category") or "UNKNOWN"
         try:
-            score = float((r.get("impact_score") or "").replace(",", "."))
+            score = parse_swedish_float(r.get("impact_score"))
             cat_scores[cat].append(score)
-        except (ValueError, AttributeError):
+        except Exception:
             pass
 
     avg_cat_scores = {
@@ -156,7 +159,7 @@ def network_incidents(input_csv=INPUT_CSV):
     site_summary = {}
     for r in rows:
         site = r.get("site") or "UNKNOWN"
-        sev = (r.get("severity") or "").lower()
+        sev = r.get("severity") or ""
         if site not in site_summary:
             site_summary[site] = {
                 "count": 0, "total_cost": 0.0, "total_res": 0,
@@ -172,10 +175,9 @@ def network_incidents(input_csv=INPUT_CSV):
     for site, data in site_summary.items():
         data["avg_res"] = round(data["total_res"] / data["count"], 1) if data["count"] else 0
 
-    with open ("incidents_by_site.csv", "w", newline="", encoding="utf-8") as f:
-        writer = csv.writer(f)
-        writer.writerow([
-            "Site", 
+    with open("incidents_by_site.csv", "w", newline="", encoding="utf-8") as f:
+        fieldnames = [
+            "Site",
             "Total Incidents",
             "Critical Incidents",
             "High Incidents",
@@ -183,85 +185,122 @@ def network_incidents(input_csv=INPUT_CSV):
             "Low Incidents", 
             "Avg Resolution (min)", 
             "Total Cost (SEK)"
-        ])
+        ]
+        writer = csv.DictWriter(f, fieldnames=fieldnames)
+        writer.writeheader()
+
         for site , data in site_summary.items():
-            writer.writerow([
-                site,
-                data["count"],
-                data["critical"],
-                data["high"],
-                data["medium"],
-                data["low"],
-                data["avg_res"],
-                format_sek(data["total_cost"])
-            ])
+            writer.writerow({
+                "Site": site,
+                "Total Incidents": data["count"],
+                "Critical Incidents": data["critical"],
+                "High Incidents": data["high"],
+                "Medium Incidents": data["medium"],
+                "Low Incidents": data["low"],
+                "Avg Resolution (min)": data["avg_res"],
+                "Total Cost (SEK)": format_sek(data["total_cost"])
+            })
 
     # problem_devices.csv
     severity_map = {"critical": 4, "high": 3, "medium": 2, "low": 1}
-    type_map = {"SW": "switch", "AP": "access_point", "RT": "router", "FW": "firewall", "LB": "load_balancer"}
+    type_map = {
+        "SW": "switch", "AP": "access_point", "RT": "router", 
+        "FW": "firewall", "LB": "load_balancer"
+    }
     device_summary = {}
-    max_week = max(r["week_number"] for r in rows if r["week_number"])
+    max_week = max((r["week_number"] for r in rows if r["week_number"]), default=0)
+
     for r in rows:
         dev = r.get("device_hostname") or "UNKNOWN"
         site = r.get("site") or "UNKNOWN"
-        sev = r.get("severity") or "unknown"
+        sev = (r.get("severity") or "unknown").lower()
         cost = r.get("cost_sek", 0.0)
         users = r.get("affected_users", 0)
         week = r.get("week_number", 0)
+
         if dev not in device_summary:
             device_summary[dev] = {
                 "site": site,
                 "device_type": type_map.get(dev.split("-")[0], "other"),
-                "count": 0, "sev_scores":[], "total_cost":0.0, "total_users":0, "recent":False
+                "count": 0, "sev_scores":[], "total_cost":0.0, "total_users":0, 
+                "recent":False
             }
-        d = device_summary[dev]
-        d["count"] += 1
-        d["sev_scores"].append(severity_map.get(sev, 0))
-        d["total_cost"] += cost
-        d["total_users"] += users
+
+        data = device_summary[dev]
+        data["count"] += 1
+        data["sev_scores"].append(severity_map.get(sev.lower(), 0))
+        data["total_cost"] += cost
+        data["total_users"] += users
         if week >= max_week - 1:
-            d["recent"] = True
+            data["recent"] = True
 
-    with open("problem_devices.csv", "w",newline="",encoding="utf-8") as f:
-        writer = csv.writer(f)
-        writer.writerow([
-            "device_hostname", "site", "device_type", "incident_count",
-            "avg_severity_score", "total_cost_sek", "avg_affected_users", "in_last_weeks_warnings"
-        ])
+    with open("problem_devices.csv", "w", newline="", encoding="utf-8") as f:
+        fieldnames = [
+            "device_hostname", 
+            "site", "device_type", 
+            "incident_count",
+            "avg_severity_score", 
+            "total_cost_sek", 
+            "avg_affected_users",
+            "in_last_weeks_warnings"
+        ]
+        writer = csv.DictWriter(f, fieldnames=fieldnames)
+        writer.writeheader()
 
-        for dev, d in sorted(device_summary.items(),
+        for dev, data in sorted(device_summary.items(),
                              key=lambda x: (x[1]["count"], x[1]["total_cost"]),
                              reverse=True):
-            writer.writerow([
-                dev,
-                d["site"],
-                d["device_type"],
-                d["count"],
-                round(sum(d["sev_scores"]) / len(d["sev_scores"]), 1) if d["sev_scores"] else 0,
-                format_sek(d["total_cost"]),
-                round(d["total_users"] / d["count"], 1) if d["count"] else 0,
-                "yes" if d["recent"] else "no"       
-            ])
+            avg_sev = (sum(data["sev_scores"]) / len(data["sev_scores"])) if data["sev_scores"] else 0
+            avg_users = (data["total_users"] / data["count"]) if data["count"] else 0                              
+            
+            writer.writerow({
+                "device_hostname": dev,
+                "site": data["site"],
+                "device_type": data["device_type"],
+                "incident_count": data ["count"],
+                "avg_severity_score": f"{avg_sev:.2f}",
+                "total_cost_sek": format_sek(data["total_cost"]),
+                "avg_affected_users": f"{avg_users:.2f}",
+                "in_last_weeks_warnings": "yes" if data["recent"] else "no"                 
+            }) 
 
 # cost_analysis.csv
 
-    weekly = defaultdict(lambda: {"cost": 0.0, "impact_scores": []})
+    weekly_summary = {}
+
     for r in rows:
-        week = r.get("week_number", 0)
-        weekly[week]["cost"] += r.get("cost_sek", 0.0)
+        week = r.get("week_number")
+        if not week or week <1 or week > 52:
+            continue
+        if week not in weekly_summary:
+            weekly_summary[week] = {"impact_scores": [],"total_cost": 0.0,}
+
+        weekly_summary[week]["total_cost"] += r.get("cost_sek", 0.0)
+
         try:
-            score = float((r.get("impact_score") or "").replace(",", "."))
-            weekly[week]["impact_scores"].append(score)
-        except (ValueError, AttributeError):
+            score = parse_swedish_float(r.get("impact_score"))
+            weekly_summary[week]["impact_scores"].append(score)
+        except Exception:
             pass
 
-    with open ("cost_analysis.csv", "w", newline="", encoding="utf-8") as f:
-        writer = csv.writer(f)
-        writer.writerow(["week_number", "avg_impact_score", "total_cost_sek"])
-        for week in sorted(weekly.keys()):
-            data = weekly[week]
+    with open("cost_analysis.csv", "w", newline="", encoding="utf-8") as f:
+        fieldnames = [
+            "week_number", 
+            "avg_impact_score", 
+            "total_cost_sek"
+        ]
+        writer = csv.DictWriter(f, fieldnames=fieldnames)
+        writer.writeheader()
+
+        for week in sorted(weekly_summary.keys()):
+            data = weekly_summary[week]
             avg_score = round(sum(data["impact_scores"]) / len(data["impact_scores"]), 2) if data["impact_scores"] else 0
-            writer.writerow([week, avg_score, format_sek(data["cost"])])      
+            
+            writer.writerow({
+                "week_number": week,
+                "avg_impact_score": f"{avg_score:.2f}".replace(".", ","), 
+                "total_cost_sek": format_sek(data["total_cost"])
+            })      
 
     return {
         "rows": rows,
@@ -280,7 +319,7 @@ def network_incidents(input_csv=INPUT_CSV):
         "cat_counts": cat_counts
 }
 
-# generate text report
+# incident_analysis.txt
 
 def incident_analysis(results, out_txt=OUT_TXT):
     with open(out_txt, "w", encoding="utf-8") as f:
@@ -298,8 +337,8 @@ def incident_analysis(results, out_txt=OUT_TXT):
         f.write(f"Total cost (SEK): {format_sek(results['total_cost'])}\n\n")
 
         # executive summary
-        f.write("\n" + "=" * 90)
-        f.write("\nExecutive Summary:")
+        f.write("\n" + "=" * 90 + "\n")
+        f.write("Executive Summary:")
         f.write("\n" + "=" * 90 + "\n")
 
         tor02_incidents = [r for r in results["rows"] if r.get("device_hostname") == "SW-DC-TOR-02"]
@@ -322,33 +361,44 @@ def incident_analysis(results, out_txt=OUT_TXT):
         crit_count = results["per_severity"].get("critical", {}).get("count", 0)
         non_crit = total - crit_count
         f.write(
-            f"✓ Majority of incidents were non-crititical ({non_crit} of {total})\n\n"
+            f"✓ Majority of incidents were non-critical ({non_crit} of {total})\n\n"
             )
 
         # incidents by severity
-        f.write("\n" + "=" * 75)
-        f.write("\nIncidents by severity:")
         f.write("\n" + "=" * 75 + "\n")
+        f.write("Incidents by severity:")
+        f.write( "\n" + "=" * 75 + "\n")
         f.write(format_columns(
             ["Severity", "Count", "Avg Res (min)", "Avg Cost (SEK)"],
-            [18, 18, 18, 18],
+            [18, 18, 18, 18]
         ))
         f.write("-" * 75 + "\n")
         severity_order = {"critical":1, "high": 2, "medium": 3, "low": 4}
         for sev, data in sorted(results["per_severity"].items(), 
             key=lambda x: severity_order.get(x[0].lower(), 99)):
             f.write(format_columns(
-                [sev.capitalize(), data['count'], data['avg_res'], format_sek(data['avg_cost'])],
+                [
+                    sev.capitalize(), 
+                    data['count'], 
+                    data['avg_res'], 
+                    format_sek(data['avg_cost'])
+                ],
                 [18, 18, 18, 18],
         ))
 
         # incidents affecting more than 100 users
         f.write("\n\n" + "=" * 90 + "\n")
-        f.write(f"Incidents affecting more than 100 users ({len(results['big_incidents'])}):\n")
-        f.write("=" * 90 + "\n")
+        f.write(f"Incidents affecting more than 100 users ({len(results['big_incidents'])})")
+        f.write("\n" + "=" * 90 + "\n")
         f.write(format_columns(
-            ["Ticket", "Device", "Site", "Affected Users", "Cost (SEK)"],
-            [18, 18, 18, 18, 18],
+            [
+                "Ticket", 
+                "Device", 
+                "Site", 
+                "Affected Users", 
+                "Cost (SEK)"
+            ],
+            [18, 18, 18, 18, 18]
         ))
 
         f.write("-" * 90 + "\n")
@@ -366,11 +416,17 @@ def incident_analysis(results, out_txt=OUT_TXT):
             ))
 
         # top 5 incidents by cost
-        f.write("\n\n" + "=" * 90)
-        f.write("\nTop 5 incidents by cost:\n")
-        f.write("=" * 90 + "\n")
+        f.write("\n\n" + "=" * 90 + "\n")
+        f.write("Top 5 incidents by cost:")
+        f.write("\n" + "=" * 90 + "\n")
         f.write(format_columns(
-            ["Ticket", "Device", "Site", "Category", "Cost (SEK)"],
+            [
+                "Ticket", 
+                "Device", 
+                "Site", 
+                "Category", 
+                "Cost (SEK)"
+            ],
             [18, 18, 18, 18, 18],
         ))
         f.write("-" * 90 + "\n")
@@ -389,14 +445,49 @@ def incident_analysis(results, out_txt=OUT_TXT):
 
         # average impact score
         f.write("\n\n" + "=" * 75 + "\n")
-        f.write("Incidents per category with average impact score:\n")
-        f.write("=" * 75 + "\n")
-        f.write(f"{'Category':38}{'Count':19}{'Avg Impact Score':15}\n")
+        f.write("Incidents per category with average impact score:")
+        f.write("\n" + "=" * 75 + "\n")
+        f.write(format_columns(["Category", "Count", "Avg Impact Score"],
+            [18, 18, 18]
+        ))
         f.write("-" * 75 + "\n")
-
+        
+        
         for cat, score in sorted(results["avg_cat_scores"].items()):
             count = results["cat_counts"].get(cat, 0)
-            f.write(f"{cat:21}{count:20}{score:20}\n")
+            f.write(format_columns(
+                [
+                    cat, 
+                    count, 
+                    score
+                ],
+                [18, 18, 18]
+            ))
+        f.write("\n\n" + "=" * 90 + "\n")
+        f.write("|                                     RECOMMENDATIONS                                    |")
+        f.write("\n" + "=" * 90 + "\n\n")
+
+        f.write("CRITICAL ⚠\n")
+        f.write(". SW-DC-TOR-02 (Datacenter, switch), 4 incidents, 86 048 SEK\n")
+        f.write("> Replace or add redundancy, perform root cause analysis \n\n")
+
+        f.write("HIGH\n")
+        f.write(". RT-LAGER-01 (Lager, router) - 3 incidents, 34 901 SEK\n")
+        f.write("> Review configuration and redundancy \n\n")
+        f.write(". AP-FLOOR2-02 (Huvudkontor, access_point) - 2 incidents, severity 3.5 \n")
+        f.write("> Add load balancing for more APs\n\n")
+
+        f.write("MEDIUM\n")
+        f.write(". FW-DC-01 (Datacenter, firewall) - 2 incidents, 133 users affected \n")
+        f.write("> Increase monitoring, check capacity \n\n")
+
+        f.write("LOW\n")
+        f.write(". Devices with single low-cost incidents (e.g. FW-MAL-01, SW-DIST-01) \n")
+        f.write("> Monitor, address during planned maintenance \n\n")
+
+        f.write("=" * 90 + "\n")
+        f.write("|                                      END OF REPORT                                     |")
+        f.write("\n" + "=" * 90 + "\n")
 
 # --------------------
 # entrypoint: run analysis and produce text report only
