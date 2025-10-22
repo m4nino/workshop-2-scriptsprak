@@ -96,7 +96,7 @@ def network_incidents(input_csv=INPUT_CSV):
             row["week_number"] = safe_int(row.get("week_number"))
             row["resolution_minutes"] = safe_int(row.get("resolution_minutes"))
             row["affected_users"] = safe_int(row.get("affected_users"), default=0)           
-            row["cost_sek"] = parse_swedish_float(row.get("cost_sek", "0"))    
+            row["cost_sek"] = parse_swedish_float(row.get("cost_sek"))    
             row["severity"] = (row.get("severity") or "").strip().lower()
             row["_date_raw"] = (row.get("date") or row.get("incident_date") or "")
             row["_date_parsed"] = parse_date_flex(row["_date_raw"])                   
@@ -152,7 +152,7 @@ def network_incidents(input_csv=INPUT_CSV):
     }
     cat_counts = Counter(r.get("category") or "UNKNOWN" for r in rows)
 
-    # incidents by site (csv)
+    # incidents_by_site.csv
     site_summary = {}
     for r in rows:
         site = r.get("site") or "UNKNOWN"
@@ -184,7 +184,6 @@ def network_incidents(input_csv=INPUT_CSV):
             "Avg Resolution (min)", 
             "Total Cost (SEK)"
         ])
-
         for site , data in site_summary.items():
             writer.writerow([
                 site,
@@ -194,7 +193,54 @@ def network_incidents(input_csv=INPUT_CSV):
                 data["medium"],
                 data["low"],
                 data["avg_res"],
-                f"{data['total_cost']:.2f}".replace(".", ",")
+                format_sek(data["total_cost"])
+            ])
+
+    # problem_devices.csv
+    severity_map = {"critical": 4, "high": 3, "medium": 2, "low": 1}
+    type_map = {"SW": "switch", "AP": "access_point", "RT": "router", "FW": "firewall", "LB": "load_balancer"}
+    device_summary = {}
+    max_week = max(r["week_number"] for r in rows if r["week_number"])
+    for r in rows:
+        dev = r.get("device_hostname") or "UNKNOWN"
+        site = r.get("site") or "UNKNOWN"
+        sev = r.get("severity") or "unknown"
+        cost = r.get("cost_sek", 0.0)
+        users = r.get("affected_users", 0)
+        week = r.get("week_number", 0)
+        if dev not in device_summary:
+            device_summary[dev] = {
+                "site": site,
+                "device_type": type_map.get(dev.split("-")[0], "other"),
+                "count": 0, "sev_scores":[], "total_cost":0.0, "total_users":0, "recent":False
+            }
+        d = device_summary[dev]
+        d["count"] += 1
+        d["sev_scores"].append(severity_map.get(sev, 0))
+        d["total_cost"] += cost
+        d["total_users"] += users
+        if week > max_week - 1:
+            d["recent"] = True
+
+    with open("problem_devices.csv", "w",newline="",encoding="utf-8") as f:
+        writer = csv.writer(f)
+        writer.writerow([
+            "device_hostname", "site", "device_type", "incident_count",
+            "avg_severity_score", "total_cost_sek", "avg_affected_users", "in_last_weeks_warnings"
+        ])
+
+        for dev, d in sorted(device_summary.items(),
+                             key=lambda x: (x[1]["count"], x[1]["total_cost"]),
+                             reverse=True):
+            writer.writerow([
+                dev,
+                d["site"],
+                d["device_type"],
+                d["count"],
+                round(sum(d["sev_scores"]) / len(d["sev_scores"]), 1) if d["sev_scores"] else 0,
+                format_sek(d["total_cost"]),
+                round(d["total_users"] / d["count"], 1) if d["count"] else 0,
+                "yes" if d["recent"] else "no"       
             ])
 
     return {
