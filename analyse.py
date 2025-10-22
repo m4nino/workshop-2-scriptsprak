@@ -219,7 +219,7 @@ def network_incidents(input_csv=INPUT_CSV):
         d["sev_scores"].append(severity_map.get(sev, 0))
         d["total_cost"] += cost
         d["total_users"] += users
-        if week > max_week - 1:
+        if week >= max_week - 1:
             d["recent"] = True
 
     with open("problem_devices.csv", "w",newline="",encoding="utf-8") as f:
@@ -243,6 +243,26 @@ def network_incidents(input_csv=INPUT_CSV):
                 "yes" if d["recent"] else "no"       
             ])
 
+# cost_analysis.csv
+
+    weekly = defaultdict(lambda: {"cost": 0.0, "impact_scores": []})
+    for r in rows:
+        week = r.get("week_number", 0)
+        weekly[week]["cost"] += r.get("cost_sek", 0.0)
+        try:
+            score = float((r.get("impact_score") or "").replace(",", "."))
+            weekly[week]["impact_scores"].append(score)
+        except (ValueError, AttributeError):
+            pass
+
+    with open ("cost_analysis.csv", "w", newline="", encoding="utf-8") as f:
+        writer = csv.writer(f)
+        writer.writerow(["week_number", "avg_impact_score", "total_cost_sek"])
+        for week in sorted(weekly.keys()):
+            data = weekly[week]
+            avg_score = round(sum(data["impact_scores"]) / len(data["impact_scores"]), 2) if data["impact_scores"] else 0
+            writer.writerow([week, avg_score, format_sek(data["cost"])])      
+
     return {
         "rows": rows,
         "total_incidents": total_incidents,
@@ -258,7 +278,7 @@ def network_incidents(input_csv=INPUT_CSV):
         "site_summary": site_summary,
         "avg_cat_scores": avg_cat_scores,
         "cat_counts": cat_counts
-    }
+}
 
 # generate text report
 
